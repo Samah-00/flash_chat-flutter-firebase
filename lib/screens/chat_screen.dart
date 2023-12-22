@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flash_chat/constants.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ChatScreen extends StatefulWidget {
   static String id = 'chat-page';
+
+  const ChatScreen({super.key});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -12,12 +15,12 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _auth = FirebaseAuth.instance;
   late User loggedInUser;
+  final _firestore = FirebaseFirestore.instance;
 
-  void getCurrentUser(){
-    if(_auth.currentUser != null) {
+  void getCurrentUser() {
+    if (_auth.currentUser != null) {
       loggedInUser = _auth.currentUser!;
-    }
-    else {
+    } else {
       // TODO: handle the case where the currentUser is null
     }
   }
@@ -42,7 +45,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 Navigator.pop(context);
               }),
         ],
-        title: Text('⚡️Chat'),
+        title: const Text('⚡️Chat'),
         backgroundColor: Colors.lightBlueAccent,
       ),
       body: SafeArea(
@@ -50,6 +53,29 @@ class _ChatScreenState extends State<ChatScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
+            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: _firestore.collection('messages').snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(
+                      child: Text('Welcome to ⚡️Chat'),
+                    );
+                  }
+                  final messages = snapshot.data?.docs;
+                  List<Text> messageWidgets = [];
+
+                  for (var message in messages!) {
+                    final messageText = message.data()['text'];
+                    final messageSender = message.data()['sender'];
+
+                    final messageWidget =
+                        Text('$messageText from $messageSender');
+                    messageWidgets.add(messageWidget);
+                  }
+                  return Column(
+                    children: messageWidgets,
+                  );
+                }),
             Container(
               decoration: kMessageContainerDecoration,
               child: Row(
@@ -67,7 +93,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     onPressed: () {
                       //Implement send functionality.
                     },
-                    child: Text(
+                    child: const Text(
                       'Send',
                       style: kSendButtonTextStyle,
                     ),
