@@ -1,6 +1,9 @@
 import 'package:flash_chat/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flash_chat/components/rounded_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import 'chat_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   static String id = 'login-page';
@@ -12,43 +15,55 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+
+  late String email;
+  late String password;
+  final _auth = FirebaseAuth.instance;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Hero(
-              tag: 'logo',
-              child: SizedBox(
-                height: 200.0,
-                child: Image.asset('images/logo.png'),
+            Flexible(
+              child: Hero(
+                tag: 'logo',
+                child: SizedBox(
+                  height: 200.0,
+                  child: Image.asset('images/logo.png'),
+                ),
               ),
             ),
             const SizedBox(
               height: 48.0,
             ),
             TextField(
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.emailAddress,
               onChanged: (value) {
-                //Do something with the user input.
+                //Do something with the user input
+                email = value;
               },
               decoration: kTextFieldDecoration.copyWith(
-                  hintText: 'Enter your email.'
+                  hintText: 'Enter your email'
               ),
             ),
             const SizedBox(
               height: 8.0,
             ),
             TextField(
+              textAlign: TextAlign.center,
+              obscureText: true,
               onChanged: (value) {
-                //Do something with the user input.
+                //Do something with the user input
+                password = value;
               },
               decoration: kTextFieldDecoration.copyWith(
-                  hintText: 'Enter your password.'),
+                  hintText: 'Enter your password'),
             ),
             const SizedBox(
               height: 24.0,
@@ -56,8 +71,16 @@ class _LoginScreenState extends State<LoginScreen> {
             RoundedButton(
               color: Colors.lightBlueAccent,
               text: 'Log In',
-              onPressed: () {
-                //Implement login functionality.
+              onPressed: () async {
+                // login
+                try{
+                  final currentUser = _auth.signInWithEmailAndPassword(email: email, password: password);
+                  if(_auth.currentUser != null) {
+                    Navigator.pushNamed(context, ChatScreen.id);
+                  }
+                } catch (e) {
+                  // TODO: handle the cases where the sign in fails
+                }
               },
             ),
           ],
